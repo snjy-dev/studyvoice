@@ -6,6 +6,7 @@ import 'package:study_voice/core/widgets/empty_state.dart';
 import 'package:study_voice/core/widgets/feature_tile.dart';
 import 'package:study_voice/core/widgets/section_header.dart';
 import 'package:study_voice/core/widgets/study_card.dart';
+import 'package:study_voice/features/pdf/presentation/widgets/pdf_import_button.dart';
 import 'package:study_voice/l10n/app_localizations.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -242,12 +243,7 @@ class _QuickActionsGrid extends StatelessWidget {
       crossAxisSpacing: AppSpacing.m,
       childAspectRatio: 0.95,
       children: [
-        FeatureTile(
-          icon: Icons.picture_as_pdf_rounded,
-          title: l10n.openPdf,
-          subtitle: l10n.localStorage,
-          onTap: _dummyOnTap,
-        ),
+        const PdfImportButton(),
         FeatureTile(
           icon: Icons.camera_alt_rounded,
           title: l10n.scanImage,
