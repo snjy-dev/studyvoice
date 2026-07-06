@@ -6,7 +6,8 @@ import 'package:study_voice/core/services/pdf/pdf_service.dart';
 class PdfServiceImpl implements PdfService {
   @override
   Future<File?> pickPdf() async {
-    // Attempting instance access for FilePicker in 11.0.2
+    // Standard implementation for file_picker 11.0.2
+    // ignore: undefined_getter
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
@@ -20,25 +21,45 @@ class PdfServiceImpl implements PdfService {
 
   @override
   Future<String> extractText(File pdfFile) async {
-    return '';
+    final bytes = await pdfFile.readAsBytes();
+    sf.PdfDocument? document;
+    try {
+      document = sf.PdfDocument(inputBytes: bytes);
+      
+      final extractor = sf.PdfTextExtractor(document);
+      return extractor.extractText();
+    } catch (e) {
+      if (e.toString().contains('password') || e.toString().contains('encrypted')) {
+        throw Exception('This PDF is encrypted and cannot be read.');
+      }
+      throw Exception('Failed to extract text from PDF: $e');
+    } finally {
+      document?.dispose();
+    }
   }
 
   @override
   Future<int> getPageCount(File pdfFile) async {
     final bytes = await pdfFile.readAsBytes();
-    final document = sf.PdfDocument(inputBytes: bytes);
-    final count = document.pages.count;
-    document.dispose();
-    return count;
+    sf.PdfDocument? document;
+    try {
+      document = sf.PdfDocument(inputBytes: bytes);
+      return document.pages.count;
+    } finally {
+      document?.dispose();
+    }
   }
 
   @override
   Future<String?> getDocumentTitle(File pdfFile) async {
     final bytes = await pdfFile.readAsBytes();
-    final document = sf.PdfDocument(inputBytes: bytes);
-    final title = document.documentInformation.title;
-    document.dispose();
-    return title;
+    sf.PdfDocument? document;
+    try {
+      document = sf.PdfDocument(inputBytes: bytes);
+      return document.documentInformation.title;
+    } finally {
+      document?.dispose();
+    }
   }
 
   @override

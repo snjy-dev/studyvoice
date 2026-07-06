@@ -1,5 +1,7 @@
-import 'package:study_voice/features/pdf/domain/entities/pdf_document.dart';
+import 'dart:io';
+import 'package:study_voice/features/pdf/domain/entities/study_pdf.dart';
 
 abstract class PdfRepository {
-  Future<PdfDocument?> importPdf();
+  Future<StudyPdf?> pickAndValidatePdf();
+  Future<StudyPdf> extractPdfText(File file, StudyPdf partialDoc);
 }

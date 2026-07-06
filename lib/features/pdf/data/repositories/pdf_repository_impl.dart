@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:study_voice/core/services/pdf/pdf_service.dart';
-import 'package:study_voice/features/pdf/domain/entities/pdf_document.dart';
+import 'package:study_voice/features/pdf/domain/entities/study_pdf.dart';
 import 'package:study_voice/features/pdf/domain/repositories/pdf_repository.dart';
 
 class PdfRepositoryImpl implements PdfRepository {
@@ -9,7 +9,7 @@ class PdfRepositoryImpl implements PdfRepository {
   PdfRepositoryImpl(this._pdfService);
 
   @override
-  Future<PdfDocument?> importPdf() async {
+  Future<StudyPdf?> pickAndValidatePdf() async {
     final file = await _pdfService.pickPdf();
     
     if (file == null) return null;
@@ -26,7 +26,7 @@ class PdfRepositoryImpl implements PdfRepository {
       throw Exception('File size exceeds 100 MB');
     }
 
-    // Validation: Reject non-pdf (though picker filters, double check)
+    // Validation: Reject non-pdf
     if (!file.path.toLowerCase().endsWith('.pdf')) {
       throw Exception('Selected file is not a PDF');
     }
@@ -34,13 +34,35 @@ class PdfRepositoryImpl implements PdfRepository {
     final pageCount = await _pdfService.getPageCount(file);
     final name = file.path.split(Platform.pathSeparator).last;
 
-    return PdfDocument(
+    return StudyPdf(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
       path: file.path,
       size: length,
       pageCount: pageCount,
+      extractedText: '',
+      wordCount: 0,
+      characterCount: 0,
       createdAt: DateTime.now(),
+    );
+  }
+
+  @override
+  Future<StudyPdf> extractPdfText(File file, StudyPdf partialDoc) async {
+    final text = await _pdfService.extractText(file);
+    
+    if (text.trim().isEmpty) {
+      throw Exception('No readable text found in this PDF. It might be a scanned document or image-only.');
+    }
+
+    // Basic business logic for word and character count
+    final wordCount = text.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).length;
+    final charCount = text.length;
+
+    return partialDoc.copyWith(
+      extractedText: text,
+      wordCount: wordCount,
+      characterCount: charCount,
     );
   }
 }

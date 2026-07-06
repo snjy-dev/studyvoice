@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:study_voice/core/theme/app_radius.dart';
 import 'package:study_voice/core/widgets/feature_tile.dart';
 import 'package:study_voice/features/pdf/presentation/providers/pdf_provider.dart';
+import 'package:study_voice/features/reader/presentation/providers/reader_provider.dart';
 import 'package:study_voice/l10n/app_localizations.dart';
 
 class PdfImportButton extends ConsumerWidget {
@@ -17,19 +19,19 @@ class PdfImportButton extends ConsumerWidget {
       next.whenOrNull(
         error: (error, stack) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error.toString())),
+            SnackBar(
+              content: Text(error.toString().replaceAll('Exception: ', '')),
+              behavior: SnackBarBehavior.floating,
+            ),
           );
+          ref.read(pdfImportProvider.notifier).reset();
         },
         data: (doc) {
           if (doc != null) {
-            final sizeMb = (doc.size / (1024 * 1024)).toStringAsFixed(2);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Import Success: ${doc.name} ($sizeMb MB)',
-                ),
-              ),
-            );
+            // Set as current document and navigate
+            ref.read(currentPdfProvider.notifier).state = doc;
+            context.pushNamed('reader');
+            ref.read(pdfImportProvider.notifier).reset();
           }
         },
       );
@@ -40,8 +42,10 @@ class PdfImportButton extends ConsumerWidget {
         FeatureTile(
           icon: Icons.picture_as_pdf_rounded,
           title: l10n.openPdf,
-          subtitle: l10n.appTitle == 'StudyVoice' ? 'Local storage' : 'உள்ளூர் சேமிப்பு',
-          onTap: () => ref.read(pdfImportProvider.notifier).importPdf(),
+          subtitle: l10n.localStorage,
+          onTap: state.isLoading 
+            ? () {} 
+            : () => ref.read(pdfImportProvider.notifier).importAndParse(),
         ),
         if (state.isLoading)
           Positioned.fill(

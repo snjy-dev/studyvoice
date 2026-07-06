@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:study_voice/core/localization/locale_provider.dart';
 import 'package:study_voice/core/theme/app_theme.dart';
 import 'package:study_voice/features/home/presentation/screens/home_screen.dart';
+import 'package:study_voice/features/reader/presentation/screens/reader_screen.dart';
 import 'package:study_voice/l10n/app_localizations.dart';
 
 class StudyVoiceApp extends ConsumerWidget {
@@ -35,6 +36,11 @@ class StudyVoiceApp extends ConsumerWidget {
         path: '/',
         name: 'home',
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/reader',
+        name: 'reader',
+        builder: (context, state) => const ReaderScreen(),
       ),
     ],
   );
