@@ -115,4 +115,29 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get pageMarkers => 'பக்க அடையாளங்கள்';
+
+  @override
+  String get noDocumentLoaded => 'ஆவணம் ஏற்றப்படவில்லை';
+
+  @override
+  String pagesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count பக்கங்கள்',
+      one: '1 பக்கம்',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wordsCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count சொற்கள்',
+      one: '1 சொல்',
+    );
+    return '$_temp0';
+  }
 }

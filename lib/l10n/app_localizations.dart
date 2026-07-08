@@ -307,6 +307,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Page markers'**
   String get pageMarkers;
+
+  /// No description provided for @noDocumentLoaded.
+  ///
+  /// In en, this message translates to:
+  /// **'No document loaded'**
+  String get noDocumentLoaded;
+
+  /// No description provided for @pagesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Page} other{{count} Pages}}'**
+  String pagesCount(num count);
+
+  /// No description provided for @wordsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Word} other{{count} Words}}'**
+  String wordsCount(num count);
 }
 
 class _AppLocalizationsDelegate

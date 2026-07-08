@@ -37,5 +37,18 @@
   "fromClipboard": "From clipboard",
   "pastActivity": "Past activity",
   "savedItems": "Saved items",
-  "pageMarkers": "Page markers"
+  "pageMarkers": "Page markers",
+  "noDocumentLoaded": "No document loaded",
+  "pagesCount": "{count, plural, =1{1 Page} other{{count} Pages}}",
+  "@pagesCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "wordsCount": "{count, plural, =1{1 Word} other{{count} Words}}",
+  "@wordsCount": {
+    "placeholders": {
+      "count": {}
+    }
+  }
 }

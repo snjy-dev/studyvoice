@@ -113,4 +113,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pageMarkers => 'Page markers';
+
+  @override
+  String get noDocumentLoaded => 'No document loaded';
+
+  @override
+  String pagesCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Pages',
+      one: '1 Page',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wordsCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Words',
+      one: '1 Word',
+    );
+    return '$_temp0';
+  }
 }

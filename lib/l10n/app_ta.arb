@@ -34,5 +34,8 @@
   "fromClipboard": "ஒட்டப்பட்ட உரை",
   "pastActivity": "கடந்த வரலாறு",
   "savedItems": "சேமித்தவை",
-  "pageMarkers": "பக்க அடையாளங்கள்"
+  "pageMarkers": "பக்க அடையாளங்கள்",
+  "noDocumentLoaded": "ஆவணம் ஏற்றப்படவில்லை",
+  "pagesCount": "{count, plural, =1{1 பக்கம்} other{{count} பக்கங்கள்}}",
+  "wordsCount": "{count, plural, =1{1 சொல்} other{{count} சொற்கள்}}"
 }

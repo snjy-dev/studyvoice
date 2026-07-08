@@ -6,9 +6,7 @@ import 'package:study_voice/core/services/pdf/pdf_service.dart';
 class PdfServiceImpl implements PdfService {
   @override
   Future<File?> pickPdf() async {
-    // Standard implementation for file_picker 11.0.2
-    // ignore: undefined_getter
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
     );

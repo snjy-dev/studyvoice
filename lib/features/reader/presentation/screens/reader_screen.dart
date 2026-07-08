@@ -4,6 +4,7 @@ import 'package:study_voice/core/theme/app_spacing.dart';
 import 'package:study_voice/core/theme/app_typography.dart';
 import 'package:study_voice/core/widgets/app_scaffold.dart';
 import 'package:study_voice/features/reader/presentation/providers/reader_provider.dart';
+import 'package:study_voice/l10n/app_localizations.dart';
 
 class ReaderScreen extends ConsumerWidget {
   const ReaderScreen({super.key});
@@ -11,11 +12,12 @@ class ReaderScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pdf = ref.watch(currentPdfProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     if (pdf == null) {
-      return const AppScaffold(
+      return AppScaffold(
         body: Center(
-          child: Text('No document loaded'),
+          child: Text(l10n.noDocumentLoaded),
         ),
       );
     }
@@ -30,6 +32,7 @@ class ReaderScreen extends ConsumerWidget {
       ),
       applyPadding: false,
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.l),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,11 +41,11 @@ class ReaderScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _MetadataChip(
-                  label: '${pdf.pageCount} Pages',
+                  label: l10n.pagesCount(pdf.pageCount),
                   icon: Icons.pages_rounded,
                 ),
                 _MetadataChip(
-                  label: '${pdf.wordCount} Words',
+                  label: l10n.wordsCount(pdf.wordCount),
                   icon: Icons.text_fields_rounded,
                 ),
               ],
