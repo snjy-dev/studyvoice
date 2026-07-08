@@ -11,10 +11,10 @@ class ReaderScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pdf = ref.watch(currentPdfProvider);
+    final doc = ref.watch(currentDocumentProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    if (pdf == null) {
+    if (doc == null) {
       return AppScaffold(
         body: Center(
           child: Text(l10n.noDocumentLoaded),
@@ -25,7 +25,7 @@ class ReaderScreen extends ConsumerWidget {
     return AppScaffold(
       appBar: AppBar(
         title: Text(
-          pdf.name,
+          doc.name,
           style: AppTypography.titleMedium,
           overflow: TextOverflow.ellipsis,
         ),
@@ -41,18 +41,18 @@ class ReaderScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _MetadataChip(
-                  label: l10n.pagesCount(pdf.pageCount),
+                  label: l10n.pagesCount(doc.pageCount),
                   icon: Icons.pages_rounded,
                 ),
                 _MetadataChip(
-                  label: l10n.wordsCount(pdf.wordCount),
+                  label: l10n.wordsCount(doc.wordCount),
                   icon: Icons.text_fields_rounded,
                 ),
               ],
             ),
             AppSpacing.gapL,
             SelectableText(
-              pdf.extractedText,
+              doc.extractedText,
               style: AppTypography.bodyLarge.copyWith(
                 height: 1.6,
                 letterSpacing: 0.2,

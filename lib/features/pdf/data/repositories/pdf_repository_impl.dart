@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:study_voice/core/services/pdf/pdf_service.dart';
-import 'package:study_voice/features/pdf/domain/entities/study_pdf.dart';
+import 'package:study_voice/features/pdf/domain/entities/study_document.dart';
 import 'package:study_voice/features/pdf/domain/repositories/pdf_repository.dart';
 
 class PdfRepositoryImpl implements PdfRepository {
@@ -9,7 +9,7 @@ class PdfRepositoryImpl implements PdfRepository {
   PdfRepositoryImpl(this._pdfService);
 
   @override
-  Future<StudyPdf?> pickAndValidatePdf() async {
+  Future<StudyDocument?> pickAndValidatePdf() async {
     final file = await _pdfService.pickPdf();
     
     if (file == null) return null;
@@ -34,7 +34,7 @@ class PdfRepositoryImpl implements PdfRepository {
     final pageCount = await _pdfService.getPageCount(file);
     final name = file.path.split(Platform.pathSeparator).last;
 
-    return StudyPdf(
+    return StudyDocument(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
       path: file.path,
@@ -44,11 +44,12 @@ class PdfRepositoryImpl implements PdfRepository {
       wordCount: 0,
       characterCount: 0,
       createdAt: DateTime.now(),
+      type: DocumentType.pdf,
     );
   }
 
   @override
-  Future<StudyPdf> extractPdfText(File file, StudyPdf partialDoc) async {
+  Future<StudyDocument> extractPdfText(File file, StudyDocument partialDoc) async {
     final text = await _pdfService.extractText(file);
     
     if (text.trim().isEmpty) {

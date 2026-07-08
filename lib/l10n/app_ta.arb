@@ -37,5 +37,12 @@
   "pageMarkers": "பக்க அடையாளங்கள்",
   "noDocumentLoaded": "ஆவணம் ஏற்றப்படவில்லை",
   "pagesCount": "{count, plural, =1{1 பக்கம்} other{{count} பக்கங்கள்}}",
-  "wordsCount": "{count, plural, =1{1 சொல்} other{{count} சொற்கள்}}"
+  "wordsCount": "{count, plural, =1{1 சொல்} other{{count} சொற்கள்}}",
+  "camera": "கேமரா",
+  "gallery": "கேலரி",
+  "selectSource": "படத்தின் மூலத்தைத் தேர்ந்தெடுக்கவும்",
+  "ocrNoText": "படத்தில் உரை எதுவும் கண்டறியப்படவில்லை.",
+  "ocrImageEmpty": "படக் கோப்பு காலியாக உள்ளது.",
+  "ocrCameraScan": "கேமரா ஸ்கேன்",
+  "ocrGalleryImage": "கேலரி படம்"
 }

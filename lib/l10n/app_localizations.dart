@@ -325,6 +325,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 Word} other{{count} Words}}'**
   String wordsCount(num count);
+
+  /// No description provided for @camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get camera;
+
+  /// No description provided for @gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get gallery;
+
+  /// No description provided for @selectSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Image Source'**
+  String get selectSource;
+
+  /// No description provided for @ocrNoText.
+  ///
+  /// In en, this message translates to:
+  /// **'No text detected in the image.'**
+  String get ocrNoText;
+
+  /// No description provided for @ocrImageEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Image file is empty.'**
+  String get ocrImageEmpty;
+
+  /// No description provided for @ocrCameraScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera Scan'**
+  String get ocrCameraScan;
+
+  /// No description provided for @ocrGalleryImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery Image'**
+  String get ocrGalleryImage;
 }
 
 class _AppLocalizationsDelegate

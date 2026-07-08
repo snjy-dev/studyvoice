@@ -1,4 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:study_voice/features/pdf/domain/entities/study_pdf.dart';
+import 'package:study_voice/features/pdf/domain/entities/study_document.dart';
 
-final currentPdfProvider = StateProvider<StudyPdf?>((ref) => null);
+final currentDocumentProvider = StateProvider<StudyDocument?>((ref) => null);

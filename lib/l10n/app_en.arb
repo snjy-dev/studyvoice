@@ -50,5 +50,12 @@
     "placeholders": {
       "count": {}
     }
-  }
+  },
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "selectSource": "Select Image Source",
+  "ocrNoText": "No text detected in the image.",
+  "ocrImageEmpty": "Image file is empty.",
+  "ocrCameraScan": "Camera Scan",
+  "ocrGalleryImage": "Gallery Image"
 }

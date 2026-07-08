@@ -140,4 +140,25 @@ class AppLocalizationsTa extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get camera => 'கேமரா';
+
+  @override
+  String get gallery => 'கேலரி';
+
+  @override
+  String get selectSource => 'படத்தின் மூலத்தைத் தேர்ந்தெடுக்கவும்';
+
+  @override
+  String get ocrNoText => 'படத்தில் உரை எதுவும் கண்டறியப்படவில்லை.';
+
+  @override
+  String get ocrImageEmpty => 'படக் கோப்பு காலியாக உள்ளது.';
+
+  @override
+  String get ocrCameraScan => 'கேமரா ஸ்கேன்';
+
+  @override
+  String get ocrGalleryImage => 'கேலரி படம்';
 }

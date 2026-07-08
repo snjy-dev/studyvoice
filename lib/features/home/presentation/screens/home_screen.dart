@@ -6,6 +6,7 @@ import 'package:study_voice/core/widgets/empty_state.dart';
 import 'package:study_voice/core/widgets/feature_tile.dart';
 import 'package:study_voice/core/widgets/section_header.dart';
 import 'package:study_voice/core/widgets/study_card.dart';
+import 'package:study_voice/features/ocr/presentation/widgets/ocr_scan_button.dart';
 import 'package:study_voice/features/pdf/presentation/widgets/pdf_import_button.dart';
 import 'package:study_voice/l10n/app_localizations.dart';
 
@@ -244,12 +245,7 @@ class _QuickActionsGrid extends StatelessWidget {
       childAspectRatio: 0.95,
       children: [
         const PdfImportButton(),
-        FeatureTile(
-          icon: Icons.camera_alt_rounded,
-          title: l10n.scanImage,
-          subtitle: l10n.captureAndRead,
-          onTap: _dummyOnTap,
-        ),
+        const OcrScanButton(),
         FeatureTile(
           icon: Icons.text_snippet_rounded,
           title: l10n.pasteText,

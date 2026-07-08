@@ -138,4 +138,25 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get camera => 'Camera';
+
+  @override
+  String get gallery => 'Gallery';
+
+  @override
+  String get selectSource => 'Select Image Source';
+
+  @override
+  String get ocrNoText => 'No text detected in the image.';
+
+  @override
+  String get ocrImageEmpty => 'Image file is empty.';
+
+  @override
+  String get ocrCameraScan => 'Camera Scan';
+
+  @override
+  String get ocrGalleryImage => 'Gallery Image';
 }

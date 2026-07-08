@@ -29,7 +29,7 @@ class PdfImportButton extends ConsumerWidget {
         data: (doc) {
           if (doc != null) {
             // Set as current document and navigate
-            ref.read(currentPdfProvider.notifier).state = doc;
+            ref.read(currentDocumentProvider.notifier).state = doc;
             context.pushNamed('reader');
             ref.read(pdfImportProvider.notifier).reset();
           }
