@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import 'package:study_voice/core/services/ocr/ocr_service.dart';
 import 'package:study_voice/features/pdf/domain/entities/study_document.dart';
 import 'package:study_voice/features/ocr/domain/repositories/ocr_repository.dart';
@@ -25,10 +27,16 @@ class OcrRepositoryImpl implements OcrRepository {
     
     final wordCount = text.split(RegExp(r'\s+')).where((s) => s.isNotEmpty).length;
     final charCount = text.length;
+    
+    final name = '$documentName ${DateTime.now().hour}:${DateTime.now().minute}';
+
+    // Generate a stable identity based on file properties
+    final identityString = '${file.path}_${name}_$length';
+    final stableId = sha256.convert(utf8.encode(identityString)).toString();
 
     return StudyDocument(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: '$documentName ${DateTime.now().hour}:${DateTime.now().minute}',
+      id: stableId,
+      name: name,
       path: file.path,
       size: length,
       pageCount: 1,

@@ -347,7 +347,7 @@ abstract class AppLocalizations {
   /// No description provided for @ocrNoText.
   ///
   /// In en, this message translates to:
-  /// **'No text detected in the image.'**
+  /// **'No text detected in the image. (Note: Tamil offline OCR is not yet supported)'**
   String get ocrNoText;
 
   /// No description provided for @ocrImageEmpty.
@@ -367,6 +367,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Gallery Image'**
   String get ocrGalleryImage;
+
+  /// No description provided for @play.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get play;
+
+  /// No description provided for @pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// No description provided for @stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get stop;
+
+  /// No description provided for @resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resume;
+
+  /// No description provided for @speechRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech Rate'**
+  String get speechRate;
+
+  /// No description provided for @pitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Pitch'**
+  String get pitch;
+
+  /// No description provided for @volume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get volume;
+
+  /// No description provided for @voiceLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice Language'**
+  String get voiceLanguage;
+
+  /// No description provided for @ttsError.
+  ///
+  /// In en, this message translates to:
+  /// **'TTS Error: {error}'**
+  String ttsError(Object error);
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @earlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get earlier;
+
+  /// No description provided for @completedPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% completed'**
+  String completedPercent(Object percent);
 }
 
 class _AppLocalizationsDelegate

@@ -54,8 +54,26 @@
   "camera": "Camera",
   "gallery": "Gallery",
   "selectSource": "Select Image Source",
-  "ocrNoText": "No text detected in the image.",
+  "ocrNoText": "No text detected in the image. (Note: Tamil offline OCR is not yet supported)",
   "ocrImageEmpty": "Image file is empty.",
   "ocrCameraScan": "Camera Scan",
-  "ocrGalleryImage": "Gallery Image"
+  "ocrGalleryImage": "Gallery Image",
+  "play": "Play",
+  "pause": "Pause",
+  "stop": "Stop",
+  "resume": "Resume",
+  "speechRate": "Speech Rate",
+  "pitch": "Pitch",
+  "volume": "Volume",
+  "voiceLanguage": "Voice Language",
+  "ttsError": "TTS Error: {error}",
+  "@ttsError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "earlier": "Earlier",
+  "completedPercent": "{percent}% completed"
 }

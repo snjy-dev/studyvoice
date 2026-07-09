@@ -3,6 +3,11 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:image_picker/image_picker.dart';
 import 'package:study_voice/core/services/ocr/ocr_service.dart';
 
+/// Implementation of OCR using Google ML Kit.
+/// 
+/// NOTE: Currently, on-device ML Kit (v2) supports Latin, Chinese, 
+/// Devanagari, Japanese, and Korean scripts. 
+/// Tamil script is NOT yet supported for offline OCR in this SDK.
 class OcrServiceImpl implements OcrService {
   final ImagePicker _picker = ImagePicker();
   late TextRecognizer _textRecognizer;

@@ -24,6 +24,12 @@ abstract class StorageService {
   /// Loads application settings.
   Future<Map<String, dynamic>> loadSettings();
 
+  /// Saves the list of recent documents.
+  Future<void> saveRecentDocuments(List<Map<String, dynamic>> documents);
+
+  /// Loads the list of recent documents.
+  Future<List<Map<String, dynamic>>> loadRecentDocuments();
+
   /// Clears all stored data.
   Future<void> clear();
 }

@@ -151,7 +151,8 @@ class AppLocalizationsTa extends AppLocalizations {
   String get selectSource => 'படத்தின் மூலத்தைத் தேர்ந்தெடுக்கவும்';
 
   @override
-  String get ocrNoText => 'படத்தில் உரை எதுவும் கண்டறியப்படவில்லை.';
+  String get ocrNoText =>
+      'படத்தில் உரை எதுவும் கண்டறியப்படவில்லை. (குறிப்பு: தமிழ் ஆஃப்லைன் OCR தற்போது ஆதரிக்கப்படவில்லை)';
 
   @override
   String get ocrImageEmpty => 'படக் கோப்பு காலியாக உள்ளது.';
@@ -161,4 +162,47 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get ocrGalleryImage => 'கேலரி படம்';
+
+  @override
+  String get play => 'இயக்கு';
+
+  @override
+  String get pause => 'நிறுத்து';
+
+  @override
+  String get stop => 'முடி';
+
+  @override
+  String get resume => 'தொடர்';
+
+  @override
+  String get speechRate => 'பேச்சு வேகம்';
+
+  @override
+  String get pitch => 'சுருதி';
+
+  @override
+  String get volume => 'ஒலி அளவு';
+
+  @override
+  String get voiceLanguage => 'குரல் மொழி';
+
+  @override
+  String ttsError(Object error) {
+    return 'TTS பிழை: $error';
+  }
+
+  @override
+  String get today => 'இன்று';
+
+  @override
+  String get yesterday => 'நேற்று';
+
+  @override
+  String get earlier => 'முன்பு';
+
+  @override
+  String completedPercent(Object percent) {
+    return '$percent% முடிந்தது';
+  }
 }

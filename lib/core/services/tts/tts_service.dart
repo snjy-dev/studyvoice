@@ -21,6 +21,9 @@ abstract class TtsService {
   /// Sets the speech pitch. Usually between 0.5 and 2.0.
   Future<void> setPitch(double pitch);
 
+  /// Sets the speech volume. Usually between 0.0 and 1.0.
+  Future<void> setVolume(double volume);
+
   /// Sets the speech language (e.g., 'en-US', 'ta-IN').
   Future<void> setLanguage(String language);
 

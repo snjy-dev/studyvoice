@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:study_voice/core/theme/app_spacing.dart';
 import 'package:study_voice/core/theme/app_typography.dart';
 import 'package:study_voice/core/widgets/app_scaffold.dart';
@@ -6,17 +8,22 @@ import 'package:study_voice/core/widgets/empty_state.dart';
 import 'package:study_voice/core/widgets/feature_tile.dart';
 import 'package:study_voice/core/widgets/section_header.dart';
 import 'package:study_voice/core/widgets/study_card.dart';
+import 'package:study_voice/features/library/domain/entities/recent_document.dart';
+import 'package:study_voice/features/library/presentation/providers/library_provider.dart';
 import 'package:study_voice/features/ocr/presentation/widgets/ocr_scan_button.dart';
+import 'package:study_voice/features/pdf/domain/entities/study_document.dart';
 import 'package:study_voice/features/pdf/presentation/widgets/pdf_import_button.dart';
+import 'package:study_voice/features/reader/presentation/providers/reader_provider.dart';
 import 'package:study_voice/l10n/app_localizations.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final recentDocsAsync = ref.watch(recentDocumentsProvider);
 
     return AppScaffold(
       appBar: AppBar(
@@ -70,14 +77,25 @@ class HomeScreen extends StatelessWidget {
           SectionHeader(
             title: l10n.recentDocuments,
             trailing: TextButton(
-              onPressed: () {},
+              onPressed: () => context.pushNamed('history'),
               child: Text(l10n.seeAll),
             ),
           ),
-          EmptyState(
-            icon: Icons.history_rounded,
-            title: l10n.noRecentDocs,
-            description: l10n.recentDocsDesc,
+          recentDocsAsync.when(
+            data: (docs) {
+              if (docs.isEmpty) {
+                return EmptyState(
+                  icon: Icons.history_rounded,
+                  title: l10n.noRecentDocs,
+                  description: l10n.recentDocsDesc,
+                );
+              }
+              return Column(
+                children: docs.take(5).map((doc) => _DocumentListTile(doc: doc)).toList(),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, s) => Center(child: Text('Error: $e')),
           ),
           AppSpacing.gapXl,
           SectionHeader(
@@ -95,6 +113,61 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _DocumentListTile extends ConsumerWidget {
+  final RecentDocument doc;
+
+  const _DocumentListTile({required this.doc});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final timeStr = _formatTime(doc.lastOpened);
+    
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(AppSpacing.s),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppSpacing.s),
+        ),
+        child: Icon(
+          doc.source == DocumentType.pdf ? Icons.picture_as_pdf_rounded : Icons.image_rounded,
+          color: theme.colorScheme.primary,
+        ),
+      ),
+      title: Text(doc.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text('${l10n.completedPercent((doc.progress * 100).toInt())} • $timeStr'),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () {
+        ref.read(currentDocumentProvider.notifier).state = doc.toStudyDocument();
+        context.pushNamed('reader');
+      },
+    );
+  }
+
+  String _formatTime(DateTime dateTime) {
+    return formatRelativeTime(dateTime);
+  }
+}
+
+String formatRelativeTime(DateTime dateTime) {
+  final now = DateTime.now();
+  final difference = now.difference(dateTime);
+
+  if (difference.inMinutes < 1) {
+    return 'Just now';
+  } else if (difference.inMinutes < 60) {
+    return '${difference.inMinutes}m ago';
+  } else if (difference.inHours < 24) {
+    return '${difference.inHours}h ago';
+  } else if (difference.inDays == 1) {
+    return 'Yesterday';
+  } else {
+    return '${dateTime.day}/${dateTime.month}';
   }
 }
 
@@ -143,13 +216,96 @@ class _GreetingHeader extends StatelessWidget {
   }
 }
 
-class _ContinueReadingSection extends StatelessWidget {
+class _ContinueReadingSection extends ConsumerWidget {
   const _ContinueReadingSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final recentDocs = ref.watch(recentDocumentsProvider).value ?? [];
+    
+    if (recentDocs.isEmpty) {
+      return StudyCard(
+        padding: const EdgeInsets.all(AppSpacing.l),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.s),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                ),
+                AppSpacing.gapM,
+                Text(
+                  l10n.continueReading,
+                  style: AppTypography.titleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.auto_stories_outlined,
+                    size: 48,
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+                  ),
+                  AppSpacing.gapM,
+                  Text(
+                    l10n.noActiveSession,
+                    style: AppTypography.titleMedium.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  AppSpacing.gapXs,
+                  Text(
+                    l10n.activeSessionDesc,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton(
+                onPressed: null,
+                style: FilledButton.styleFrom(
+                  disabledBackgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  disabledForegroundColor: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+                child: Text(l10n.startReading),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final latestDoc = recentDocs.first;
+    final timeStr = formatRelativeTime(latestDoc.lastOpened);
+    final remainingProgress = (1.0 - latestDoc.progress).clamp(0.0, 1.0);
+    final totalWords = latestDoc.wordCount > 0 ? latestDoc.wordCount : 1000;
+    final remainingWords = (totalWords * remainingProgress).toInt();
+    final remainingMinutes = (remainingWords / 200).ceil();
 
     return StudyCard(
       padding: const EdgeInsets.all(AppSpacing.l),
@@ -157,67 +313,84 @@ class _ContinueReadingSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(AppSpacing.s),
+                padding: const EdgeInsets.all(AppSpacing.m),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(AppSpacing.s),
                 ),
                 child: Icon(
-                  Icons.play_arrow_rounded,
+                  latestDoc.source == DocumentType.pdf ? Icons.picture_as_pdf_rounded : Icons.image_rounded,
                   color: theme.colorScheme.primary,
-                  size: 20,
+                  size: 32,
                 ),
               ),
               AppSpacing.gapM,
-              Text(
-                l10n.continueReading,
-                style: AppTypography.titleMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      latestDoc.title,
+                      style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    AppSpacing.gapXs,
+                    Row(
+                      children: [
+                        Icon(Icons.access_time_rounded, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 4),
+                        Text(
+                          timeStr,
+                          style: AppTypography.bodySmall.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(Icons.timer_outlined, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${remainingMinutes}m left',
+                          style: AppTypography.bodySmall.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
-          Center(
-            child: Column(
-              children: [
-                Icon(
-                  Icons.auto_stories_outlined,
-                  size: 48,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
-                ),
-                AppSpacing.gapM,
-                Text(
-                  l10n.noActiveSession,
-                  style: AppTypography.titleMedium.copyWith(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                AppSpacing.gapXs,
-                Text(
-                  l10n.activeSessionDesc,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: AppSpacing.l),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Progress',
+                style: AppTypography.labelMedium.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              ),
+              Text(
+                '${(latestDoc.progress * 100).toInt()}%',
+                style: AppTypography.labelLarge.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          AppSpacing.gapS,
+          LinearProgressIndicator(
+            value: latestDoc.progress,
+            backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppSpacing.xs),
           ),
           const SizedBox(height: AppSpacing.xl),
           SizedBox(
             width: double.infinity,
             height: 48,
             child: FilledButton(
-              onPressed: null,
-              style: FilledButton.styleFrom(
-                disabledBackgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                disabledForegroundColor: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-              ),
-              child: Text(l10n.startReading),
+              onPressed: () {
+                ref.read(currentDocumentProvider.notifier).state = latestDoc.toStudyDocument();
+                context.pushNamed('reader');
+              },
+              child: Text(l10n.continueReading),
             ),
           ),
         ],
@@ -256,7 +429,7 @@ class _QuickActionsGrid extends StatelessWidget {
           icon: Icons.history_rounded,
           title: l10n.history,
           subtitle: l10n.pastActivity,
-          onTap: _dummyOnTap,
+          onTap: () => context.pushNamed('history'),
         ),
         FeatureTile(
           icon: Icons.star_rounded,

@@ -149,7 +149,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectSource => 'Select Image Source';
 
   @override
-  String get ocrNoText => 'No text detected in the image.';
+  String get ocrNoText =>
+      'No text detected in the image. (Note: Tamil offline OCR is not yet supported)';
 
   @override
   String get ocrImageEmpty => 'Image file is empty.';
@@ -159,4 +160,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ocrGalleryImage => 'Gallery Image';
+
+  @override
+  String get play => 'Play';
+
+  @override
+  String get pause => 'Pause';
+
+  @override
+  String get stop => 'Stop';
+
+  @override
+  String get resume => 'Resume';
+
+  @override
+  String get speechRate => 'Speech Rate';
+
+  @override
+  String get pitch => 'Pitch';
+
+  @override
+  String get volume => 'Volume';
+
+  @override
+  String get voiceLanguage => 'Voice Language';
+
+  @override
+  String ttsError(Object error) {
+    return 'TTS Error: $error';
+  }
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String get earlier => 'Earlier';
+
+  @override
+  String completedPercent(Object percent) {
+    return '$percent% completed';
+  }
 }

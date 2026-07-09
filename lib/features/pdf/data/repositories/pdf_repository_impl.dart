@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:study_voice/core/services/pdf/pdf_service.dart';
 import 'package:study_voice/features/pdf/domain/entities/study_document.dart';
 import 'package:study_voice/features/pdf/domain/repositories/pdf_repository.dart';
@@ -34,8 +36,12 @@ class PdfRepositoryImpl implements PdfRepository {
     final pageCount = await _pdfService.getPageCount(file);
     final name = file.path.split(Platform.pathSeparator).last;
 
+    // Generate a stable identity based on file properties
+    final identityString = '${file.path}_${name}_$length';
+    final stableId = sha256.convert(utf8.encode(identityString)).toString();
+
     return StudyDocument(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: stableId,
       name: name,
       path: file.path,
       size: length,
