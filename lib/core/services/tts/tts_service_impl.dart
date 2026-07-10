@@ -77,4 +77,9 @@ class TtsServiceImpl implements TtsService {
   void setPauseHandler(Function() handler) => _flutterTts.setPauseHandler(handler);
   void setContinueHandler(Function() handler) => _flutterTts.setContinueHandler(handler);
   void setErrorHandler(Function(dynamic) handler) => _flutterTts.setErrorHandler(handler);
+  
+  @override
+  void setProgressHandler(Function(String text, int start, int end, String word) handler) {
+    _flutterTts.setProgressHandler(handler);
+  }
 }

@@ -7,6 +7,7 @@ class StorageServiceImpl implements StorageService {
   static const String _bookmarksBox = 'bookmarks';
   static const String _favoritesBox = 'favorites';
   static const String _recentDocumentsBox = 'recent_documents';
+  static const String _appSettingsBox = 'app_settings';
 
   Future<Box<dynamic>> _getBox(String name) async {
     return await Hive.openBox<dynamic>(name);
@@ -38,9 +39,22 @@ class StorageServiceImpl implements StorageService {
   }
 
   @override
-  Future<void> saveBookmark(Map<String, dynamic> bookmark) async {
+  Future<void> saveAppSettings(Map<String, dynamic> settings) async {
+    final box = await _getBox(_appSettingsBox);
+    await box.putAll(settings);
+  }
+
+  @override
+  Future<Map<String, dynamic>> loadAppSettings() async {
+    final box = await _getBox(_appSettingsBox);
+    return Map<String, dynamic>.from(box.toMap());
+  }
+
+  @override
+  Future<void> saveBookmarks(List<Map<String, dynamic>> bookmarks) async {
     final box = await _getBox(_bookmarksBox);
-    await box.add(bookmark);
+    await box.clear();
+    await box.addAll(bookmarks);
   }
 
   @override
@@ -62,15 +76,16 @@ class StorageServiceImpl implements StorageService {
   }
 
   @override
-  Future<void> saveFavorites(Map<String, dynamic> favorite) async {
+  Future<void> saveFavoriteIds(List<String> favoriteIds) async {
     final box = await _getBox(_favoritesBox);
-    await box.add(favorite);
+    await box.clear();
+    await box.addAll(favoriteIds);
   }
 
   @override
-  Future<List<Map<String, dynamic>>> loadFavorites() async {
+  Future<List<String>> loadFavoriteIds() async {
     final box = await _getBox(_favoritesBox);
-    return box.values.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    return box.values.map((e) => e.toString()).toList();
   }
 
   @override

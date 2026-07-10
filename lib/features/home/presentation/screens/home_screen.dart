@@ -10,6 +10,8 @@ import 'package:study_voice/core/widgets/section_header.dart';
 import 'package:study_voice/core/widgets/study_card.dart';
 import 'package:study_voice/features/library/domain/entities/recent_document.dart';
 import 'package:study_voice/features/library/presentation/providers/library_provider.dart';
+import 'package:study_voice/features/bookmarks/presentation/providers/bookmarks_provider.dart';
+import 'package:study_voice/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:study_voice/features/ocr/presentation/widgets/ocr_scan_button.dart';
 import 'package:study_voice/features/pdf/domain/entities/study_document.dart';
 import 'package:study_voice/features/pdf/presentation/widgets/pdf_import_button.dart';
@@ -51,12 +53,15 @@ class HomeScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              // Notification test or open settings to notifications tab
+              context.pushNamed('settings');
+            },
             icon: const Icon(Icons.notifications_none_rounded),
             tooltip: 'Notifications',
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () => context.pushNamed('settings'),
             icon: const Icon(Icons.settings_outlined),
             tooltip: l10n.settings,
           ),
@@ -101,14 +106,32 @@ class HomeScreen extends ConsumerWidget {
           SectionHeader(
             title: l10n.favorites,
             trailing: TextButton(
-              onPressed: () {},
+              onPressed: () => context.pushNamed('favorites'),
               child: Text(l10n.seeAll),
             ),
           ),
-          EmptyState(
-            icon: Icons.star_border_rounded,
-            title: l10n.noFavorites,
-            description: l10n.favoritesDesc,
+          Consumer(
+            builder: (context, ref, child) {
+              final favorites = ref.watch(favoriteDocumentsProvider);
+              if (favorites.isEmpty) {
+                return EmptyState(
+                  icon: Icons.star_border_rounded,
+                  title: l10n.noFavorites,
+                  description: l10n.favoritesDesc,
+                );
+              }
+              return Column(
+                children: favorites.take(3).map((doc) => ListTile(
+                  leading: const Icon(Icons.star_rounded, color: Colors.amber),
+                  title: Text(doc.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text('${l10n.completedPercent((doc.progress * 100).toInt())} • ${formatRelativeTime(doc.lastOpened)}'),
+                  onTap: () {
+                    ref.read(currentDocumentProvider.notifier).state = doc.toStudyDocument();
+                    context.pushNamed('reader');
+                  },
+                )).toList(),
+              );
+            },
           ),
         ],
       ),
@@ -399,15 +422,16 @@ class _ContinueReadingSection extends ConsumerWidget {
   }
 }
 
-class _QuickActionsGrid extends StatelessWidget {
+class _QuickActionsGrid extends ConsumerWidget {
   const _QuickActionsGrid();
 
-  static void _dummyOnTap() {}
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final isTablet = MediaQuery.of(context).size.width > 600;
+    
+    final favCount = ref.watch(favoriteIdsProvider).value?.length ?? 0;
+    final bmCount = ref.watch(bookmarksProvider).value?.length ?? 0;
 
     return GridView.count(
       shrinkWrap: true,
@@ -423,7 +447,7 @@ class _QuickActionsGrid extends StatelessWidget {
           icon: Icons.text_snippet_rounded,
           title: l10n.pasteText,
           subtitle: l10n.fromClipboard,
-          onTap: _dummyOnTap,
+          onTap: () => context.pushNamed('paste'),
         ),
         FeatureTile(
           icon: Icons.history_rounded,
@@ -434,14 +458,14 @@ class _QuickActionsGrid extends StatelessWidget {
         FeatureTile(
           icon: Icons.star_rounded,
           title: l10n.favorites,
-          subtitle: l10n.savedItems,
-          onTap: _dummyOnTap,
+          subtitle: '$favCount ${l10n.savedItems}',
+          onTap: () => context.pushNamed('favorites'),
         ),
         FeatureTile(
           icon: Icons.bookmark_rounded,
           title: l10n.bookmarks,
-          subtitle: l10n.pageMarkers,
-          onTap: _dummyOnTap,
+          subtitle: '$bmCount ${l10n.pageMarkers}',
+          onTap: () => context.pushNamed('bookmarks'),
         ),
       ],
     );

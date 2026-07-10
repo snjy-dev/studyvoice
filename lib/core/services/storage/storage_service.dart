@@ -1,7 +1,7 @@
 /// Interface for handling local persistent storage operations.
 abstract class StorageService {
-  /// Saves a bookmark entry.
-  Future<void> saveBookmark(Map<String, dynamic> bookmark);
+  /// Saves the list of bookmarks, overwriting existing ones.
+  Future<void> saveBookmarks(List<Map<String, dynamic>> bookmarks);
 
   /// Loads all saved bookmarks.
   Future<List<Map<String, dynamic>>> loadBookmarks();
@@ -12,17 +12,23 @@ abstract class StorageService {
   /// Loads the history entries.
   Future<List<Map<String, dynamic>>> loadHistory();
 
-  /// Saves a favorite item.
-  Future<void> saveFavorites(Map<String, dynamic> favorite);
+  /// Saves the list of favorite document IDs.
+  Future<void> saveFavoriteIds(List<String> favoriteIds);
 
-  /// Loads all favorite items.
-  Future<List<Map<String, dynamic>>> loadFavorites();
+  /// Loads all favorite document IDs.
+  Future<List<String>> loadFavoriteIds();
 
   /// Saves application settings.
   Future<void> saveSettings(Map<String, dynamic> settings);
 
   /// Loads application settings.
   Future<Map<String, dynamic>> loadSettings();
+
+  /// Saves general app settings (notifications, language).
+  Future<void> saveAppSettings(Map<String, dynamic> settings);
+
+  /// Loads general app settings.
+  Future<Map<String, dynamic>> loadAppSettings();
 
   /// Saves the list of recent documents.
   Future<void> saveRecentDocuments(List<Map<String, dynamic>> documents);

@@ -205,4 +205,109 @@ class AppLocalizationsTa extends AppLocalizations {
   String completedPercent(Object percent) {
     return '$percent% முடிந்தது';
   }
+
+  @override
+  String get noBookmarks => 'No Bookmarks';
+
+  @override
+  String get bookmarksDesc =>
+      'Bookmark important pages to easily return to them later.';
+
+  @override
+  String get searchDocument => 'Search in document';
+
+  @override
+  String get search => 'Search';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get noMatchesFound => 'No matches found';
+
+  @override
+  String matchCount(Object current, Object total) {
+    return '$current of $total';
+  }
+
+  @override
+  String get pasteFromClipboard => 'Paste from Clipboard';
+
+  @override
+  String get textIsEmpty => 'Text is empty or contains only whitespace.';
+
+  @override
+  String get defaultPastedTitle => 'Pasted Text';
+
+  @override
+  String charactersCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Characters',
+      one: '1 Character',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String forwardWords(Object count) {
+    return 'Forward $count Words';
+  }
+
+  @override
+  String rewindWords(Object count) {
+    return 'Rewind $count Words';
+  }
+
+  @override
+  String get theme => 'Theme';
+
+  @override
+  String get fontSize => 'Font Size';
+
+  @override
+  String get lineHeight => 'Line Height';
+
+  @override
+  String get letterSpacing => 'Letter Spacing';
+
+  @override
+  String get speechSettings => 'Speech Settings';
+
+  @override
+  String get readingSettings => 'Reading Settings';
+
+  @override
+  String get applicationSettings => 'Application Settings';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String get privacy => 'Privacy Policy';
+
+  @override
+  String get dailyReminder => 'Daily Reminder';
+
+  @override
+  String get enableReminders => 'Enable Reminders';
+
+  @override
+  String get testNotification => 'Test Notification';
+
+  @override
+  String get notificationDenied => 'Notification permission denied.';
+
+  @override
+  String get reminderTime => 'Reminder Time';
+
+  @override
+  String get studyReminderTitle => 'Time to study!';
+
+  @override
+  String get studyReminderBody => 'Pick up where you left off in StudyVoice.';
 }

@@ -75,5 +75,50 @@
   "today": "Today",
   "yesterday": "Yesterday",
   "earlier": "Earlier",
-  "completedPercent": "{percent}% completed"
+  "completedPercent": "{percent}% completed",
+  "noBookmarks": "No Bookmarks",
+  "bookmarksDesc": "Bookmark important pages to easily return to them later.",
+  "searchDocument": "Search in document",
+  "search": "Search",
+  "clear": "Clear",
+  "noMatchesFound": "No matches found",
+  "matchCount": "{current} of {total}",
+  "pasteFromClipboard": "Paste from Clipboard",
+  "textIsEmpty": "Text is empty or contains only whitespace.",
+  "defaultPastedTitle": "Pasted Text",
+  "charactersCount": "{count, plural, =1{1 Character} other{{count} Characters}}",
+  "@charactersCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "forwardWords": "Forward {count} Words",
+  "@forwardWords": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "rewindWords": "Rewind {count} Words",
+  "@rewindWords": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "theme": "Theme",
+  "fontSize": "Font Size",
+  "lineHeight": "Line Height",
+  "letterSpacing": "Letter Spacing",
+  "speechSettings": "Speech Settings",
+  "readingSettings": "Reading Settings",
+  "applicationSettings": "Application Settings",
+  "about": "About",
+  "version": "Version",
+  "privacy": "Privacy Policy",
+  "dailyReminder": "Daily Reminder",
+  "enableReminders": "Enable Reminders",
+  "testNotification": "Test Notification",
+  "notificationDenied": "Notification permission denied.",
+  "reminderTime": "Reminder Time",
+  "studyReminderTitle": "Time to study!",
+  "studyReminderBody": "Pick up where you left off in StudyVoice."
 }

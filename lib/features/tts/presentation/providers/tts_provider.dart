@@ -23,6 +23,10 @@ final ttsStateProvider = StreamProvider<TtsState>((ref) {
   return ref.watch(ttsRepositoryProvider).stateStream;
 });
 
+final ttsProgressProvider = StreamProvider<TtsProgress>((ref) {
+  return ref.watch(ttsRepositoryProvider).progressStream;
+});
+
 class TtsSettings {
   final double rate;
   final double pitch;

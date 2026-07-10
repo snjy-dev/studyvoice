@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:study_voice/core/localization/locale_provider.dart';
 import 'package:study_voice/core/theme/app_theme.dart';
+import 'package:study_voice/features/bookmarks/presentation/screens/bookmarks_screen.dart';
+import 'package:study_voice/features/favorites/presentation/screens/favorites_screen.dart';
 import 'package:study_voice/features/home/presentation/screens/home_screen.dart';
 import 'package:study_voice/features/library/presentation/screens/history_screen.dart';
+import 'package:study_voice/features/paste_text/presentation/screens/paste_text_screen.dart';
 import 'package:study_voice/features/reader/presentation/screens/reader_screen.dart';
+import 'package:study_voice/features/settings/presentation/screens/settings_screen.dart';
 import 'package:study_voice/l10n/app_localizations.dart';
 
 class StudyVoiceApp extends ConsumerWidget {
@@ -47,6 +51,26 @@ class StudyVoiceApp extends ConsumerWidget {
         path: '/history',
         name: 'history',
         builder: (context, state) => const HistoryScreen(),
+      ),
+      GoRoute(
+        path: '/bookmarks',
+        name: 'bookmarks',
+        builder: (context, state) => const BookmarksScreen(),
+      ),
+      GoRoute(
+        path: '/favorites',
+        name: 'favorites',
+        builder: (context, state) => const FavoritesScreen(),
+      ),
+      GoRoute(
+        path: '/paste',
+        name: 'paste',
+        builder: (context, state) => const PasteTextScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

@@ -6,10 +6,15 @@ import 'package:study_voice/features/tts/domain/repositories/tts_repository.dart
 class TtsRepositoryImpl implements TtsRepository {
   final TtsServiceImpl _ttsService;
   final _stateController = StreamController<TtsState>.broadcast();
+  final _progressController = StreamController<TtsProgress>.broadcast();
   TtsState _currentState = TtsState.idle;
   
   Completer<void>? _chunkCompleter;
   int _currentSpeechSessionId = 0;
+  
+  String _fullText = '';
+  int _currentChunkAbsoluteOffset = 0;
+  int _lastProgressAbsoluteEnd = 0;
 
   TtsRepositoryImpl(this._ttsService) {
     _ttsService.setStartHandler(() {
@@ -29,6 +34,12 @@ class TtsRepositoryImpl implements TtsRepository {
       log('TTS Engine Error: $message');
       _signalChunkComplete();
       _updateState(TtsState.error);
+    });
+    _ttsService.setProgressHandler((text, start, end, word) {
+      final absoluteStart = _currentChunkAbsoluteOffset + start;
+      final absoluteEnd = _currentChunkAbsoluteOffset + end;
+      _lastProgressAbsoluteEnd = absoluteEnd;
+      _progressController.add(TtsProgress(absoluteStart, absoluteEnd, word));
     });
   }
 
@@ -59,10 +70,14 @@ class TtsRepositoryImpl implements TtsRepository {
   }
 
   @override
-  Future<void> speak(String text) async {
+  Future<void> speak(String text, {int startOffset = 0}) async {
+    _fullText = text;
     final sessionId = ++_currentSpeechSessionId;
     
-    final cleanText = _normalizeText(text);
+    // We only speak from the startOffset onwards
+    final safeStartOffset = startOffset.clamp(0, text.length);
+    final textToSpeak = text.substring(safeStartOffset);
+    final cleanText = _normalizeText(textToSpeak);
     if (cleanText.isEmpty) {
       _updateState(TtsState.idle);
       return;
@@ -92,7 +107,13 @@ class TtsRepositoryImpl implements TtsRepository {
 
         final chunk = chunks[i];
         log('TTS Session $sessionId: Processing chunk ${i + 1}/${chunks.length} (${chunk.length} chars)');
-        log('TTS Chunk Snippet: ${chunk.substring(0, chunk.length > 60 ? 60 : chunk.length)}...');
+        
+        // Calculate the absolute offset for this chunk within the _fullText
+        if (i == 0) {
+           _currentChunkAbsoluteOffset = startOffset;
+        } else {
+           _currentChunkAbsoluteOffset += chunks[i - 1].length; 
+        }
 
         _chunkCompleter = Completer<void>();
         await _ttsService.speak(chunk);
@@ -109,6 +130,55 @@ class TtsRepositoryImpl implements TtsRepository {
       log('TTS Session $sessionId: Fatal Error', error: e, stackTrace: stack);
       _updateState(TtsState.error);
     }
+  }
+
+  @override
+  Future<void> seek(int absoluteOffset) async {
+    if (_fullText.isEmpty) return;
+    final targetOffset = absoluteOffset.clamp(0, _fullText.length);
+    await speak(_fullText, startOffset: targetOffset);
+  }
+
+  @override
+  Future<void> seekWords(int wordDelta) async {
+    if (_fullText.isEmpty) return;
+    
+    var targetOffset = _lastProgressAbsoluteEnd;
+    
+    // Simple word boundary scanning
+    if (wordDelta > 0) {
+      for (var i = 0; i < wordDelta; i++) {
+        final spaceIndex = _fullText.indexOf(RegExp(r'\s+'), targetOffset);
+        if (spaceIndex == -1) {
+          targetOffset = _fullText.length;
+          break;
+        }
+        // Skip whitespace
+        var nextWord = spaceIndex;
+        while (nextWord < _fullText.length && _fullText[nextWord].trim().isEmpty) {
+          nextWord++;
+        }
+        targetOffset = nextWord;
+      }
+    } else if (wordDelta < 0) {
+      for (var i = 0; i < -wordDelta; i++) {
+        if (targetOffset <= 0) {
+          targetOffset = 0;
+          break;
+        }
+        // Skip whitespace backwards
+        var prevChar = targetOffset - 1;
+        while (prevChar > 0 && _fullText[prevChar].trim().isEmpty) {
+          prevChar--;
+        }
+        
+        // Find start of the word
+        final lastSpaceIndex = _fullText.lastIndexOf(RegExp(r'\s+'), prevChar);
+        targetOffset = lastSpaceIndex == -1 ? 0 : lastSpaceIndex + 1;
+      }
+    }
+    
+    await seek(targetOffset);
   }
 
   List<String> _splitIntoChunks(String text, int maxSize) {
@@ -180,6 +250,9 @@ class TtsRepositoryImpl implements TtsRepository {
 
   @override
   Stream<TtsState> get stateStream => _stateController.stream;
+
+  @override
+  Stream<TtsProgress> get progressStream => _progressController.stream;
 
   TtsState get currentState => _currentState;
 }

@@ -445,6 +445,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{percent}% completed'**
   String completedPercent(Object percent);
+
+  /// No description provided for @noBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'No Bookmarks'**
+  String get noBookmarks;
+
+  /// No description provided for @bookmarksDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookmark important pages to easily return to them later.'**
+  String get bookmarksDesc;
+
+  /// No description provided for @searchDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Search in document'**
+  String get searchDocument;
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @noMatchesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches found'**
+  String get noMatchesFound;
+
+  /// No description provided for @matchCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total}'**
+  String matchCount(Object current, Object total);
+
+  /// No description provided for @pasteFromClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste from Clipboard'**
+  String get pasteFromClipboard;
+
+  /// No description provided for @textIsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Text is empty or contains only whitespace.'**
+  String get textIsEmpty;
+
+  /// No description provided for @defaultPastedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pasted Text'**
+  String get defaultPastedTitle;
+
+  /// No description provided for @charactersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Character} other{{count} Characters}}'**
+  String charactersCount(num count);
+
+  /// No description provided for @forwardWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Forward {count} Words'**
+  String forwardWords(Object count);
+
+  /// No description provided for @rewindWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewind {count} Words'**
+  String rewindWords(Object count);
+
+  /// No description provided for @theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get theme;
+
+  /// No description provided for @fontSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Font Size'**
+  String get fontSize;
+
+  /// No description provided for @lineHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Line Height'**
+  String get lineHeight;
+
+  /// No description provided for @letterSpacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Letter Spacing'**
+  String get letterSpacing;
+
+  /// No description provided for @speechSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Speech Settings'**
+  String get speechSettings;
+
+  /// No description provided for @readingSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading Settings'**
+  String get readingSettings;
+
+  /// No description provided for @applicationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Application Settings'**
+  String get applicationSettings;
+
+  /// No description provided for @about.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get about;
+
+  /// No description provided for @version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get version;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacy;
+
+  /// No description provided for @dailyReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Reminder'**
+  String get dailyReminder;
+
+  /// No description provided for @enableReminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Reminders'**
+  String get enableReminders;
+
+  /// No description provided for @testNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Test Notification'**
+  String get testNotification;
+
+  /// No description provided for @notificationDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission denied.'**
+  String get notificationDenied;
+
+  /// No description provided for @reminderTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminder Time'**
+  String get reminderTime;
+
+  /// No description provided for @studyReminderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to study!'**
+  String get studyReminderTitle;
+
+  /// No description provided for @studyReminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up where you left off in StudyVoice.'**
+  String get studyReminderBody;
 }
 
 class _AppLocalizationsDelegate

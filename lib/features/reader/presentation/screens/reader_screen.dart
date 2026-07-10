@@ -5,13 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:study_voice/core/theme/app_spacing.dart';
 import 'package:study_voice/core/theme/app_typography.dart';
 import 'package:study_voice/core/widgets/app_scaffold.dart';
+import 'package:study_voice/features/bookmarks/presentation/providers/bookmarks_provider.dart';
+import 'package:study_voice/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:study_voice/features/library/domain/entities/recent_document.dart';
 import 'package:study_voice/features/library/presentation/providers/library_provider.dart';
 import 'package:study_voice/features/pdf/domain/entities/study_document.dart';
-import 'package:study_voice/features/reader/domain/entities/reader_preferences.dart';
 import 'package:study_voice/features/reader/presentation/providers/reader_provider.dart';
-import 'package:study_voice/features/tts/domain/repositories/tts_repository.dart';
 import 'package:study_voice/features/tts/presentation/providers/tts_provider.dart';
+import 'package:study_voice/features/tts/domain/repositories/tts_repository.dart';
+import 'package:study_voice/features/search/presentation/providers/search_provider.dart';
+import 'package:study_voice/features/reader/domain/entities/reader_preferences.dart';
 import 'package:study_voice/l10n/app_localizations.dart';
 
 class ReaderScreen extends ConsumerStatefulWidget {
@@ -24,6 +27,10 @@ class ReaderScreen extends ConsumerStatefulWidget {
 class _ReaderScreenState extends ConsumerState<ReaderScreen> with WidgetsBindingObserver {
   late ScrollController _scrollController;
   Timer? _hideUiTimer;
+  Timer? _searchDebounce;
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
+  double _lastSavedProgress = -1.0;
 
   @override
   void initState() {
@@ -78,6 +85,11 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> with WidgetsBinding
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _hideUiTimer?.cancel();
+    _searchDebounce?.cancel();
+    _searchController.dispose();
+    _searchFocus.dispose();
+    ref.read(searchProvider.notifier).clearSearch();
+    ref.read(searchProvider.notifier).hideSearchBar();
     ref.read(ttsRepositoryProvider).stop();
     super.dispose();
   }
@@ -89,6 +101,8 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> with WidgetsBinding
     if (doc != null && _scrollController.hasClients) {
       final progress = ref.read(readerUiProvider).progress;
       final offset = _scrollController.offset;
+      
+      _lastSavedProgress = progress;
       
       final recentDoc = RecentDocument.fromStudyDocument(
         doc,
@@ -115,8 +129,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> with WidgetsBinding
       _resetHideTimer();
       
       // Save progress if it changes significantly (every 5%)
-      final lastSavedProgress = uiState.progress;
-      if ((progress - lastSavedProgress).abs() > 0.05) {
+      if (_lastSavedProgress < 0 || (progress - _lastSavedProgress).abs() > 0.05) {
          _saveCurrentProgress();
       }
     }
@@ -155,13 +168,145 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> with WidgetsBinding
     }
   }
 
+  void _scrollToMatch(int textOffset, String text, TextStyle textStyle) {
+    if (textOffset < 0 || textOffset > text.length) {
+      textOffset = 0;
+    }
+
+    const padding = AppSpacing.l * 2; // Left and right padding
+    final maxWidth = MediaQuery.of(context).size.width - padding;
+
+    final textSpan = TextSpan(
+      text: text.substring(0, textOffset),
+      style: textStyle,
+    );
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+    );
+
+    textPainter.layout(maxWidth: maxWidth);
+    final yOffset = textPainter.size.height;
+
+    final screenHeight = MediaQuery.of(context).size.height;
+    final topPadding = MediaQuery.of(context).padding.top + 80;
+    
+    // Center the match on screen
+    final targetOffset = yOffset - (screenHeight / 2) + topPadding;
+
+    _scrollController.animateTo(
+      targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  TextSpan _buildHighlightedText(String text, SearchState searchState, TtsProgress? ttsProgress, TextStyle baseStyle) {
+    if ((searchState.matches.isEmpty || !searchState.isSearchBarVisible) && ttsProgress == null) {
+      return TextSpan(text: text, style: baseStyle);
+    }
+    
+    // To keep it simple and highly performant, we will build a list of "events" (start/end of highlights)
+    // But since TTS is just one word, we can just overlay it.
+    
+    final spans = <InlineSpan>[];
+    var lastOffset = 0;
+
+    void addSpan(int start, int end, {bool isSearch = false, bool isCurrentSearch = false, bool isTts = false}) {
+      if (start < 0 || start > text.length || end < start || end > text.length) {
+        return; // Discard invalid highlight ranges completely
+      }
+
+      if (start > lastOffset) {
+        spans.add(TextSpan(text: text.substring(lastOffset, start)));
+      }
+      if (start < end) {
+        Color? bgColor;
+        Color? fgColor;
+        
+        if (isTts) {
+          bgColor = Theme.of(context).colorScheme.primary.withValues(alpha: 0.3);
+          fgColor = Theme.of(context).colorScheme.onSurface;
+        } else if (isSearch) {
+          bgColor = isCurrentSearch ? Colors.orange : Colors.yellow.withValues(alpha: 0.5);
+          fgColor = Colors.black;
+        }
+        
+        spans.add(TextSpan(
+          text: text.substring(start, end),
+          style: baseStyle.copyWith(backgroundColor: bgColor, color: fgColor),
+        ));
+      }
+      lastOffset = end;
+    }
+
+    if (ttsProgress != null && (!searchState.isSearchBarVisible || searchState.matches.isEmpty)) {
+      // Only TTS
+      addSpan(ttsProgress.startOffset, ttsProgress.endOffset, isTts: true);
+    } else if (ttsProgress == null && searchState.isSearchBarVisible && searchState.matches.isNotEmpty) {
+      // Only Search
+      for (var i = 0; i < searchState.matches.length; i++) {
+        final match = searchState.matches[i];
+        addSpan(match.startOffset, match.endOffset, isSearch: true, isCurrentSearch: i == searchState.currentMatchIndex);
+      }
+    } else {
+      // Both (fallback to search priority to avoid complex overlap logic for now, or just render both sequentially if they don't overlap)
+      // For a robust offline reader, usually they don't overlap. We'll just render search for simplicity.
+      for (var i = 0; i < searchState.matches.length; i++) {
+        final match = searchState.matches[i];
+        addSpan(match.startOffset, match.endOffset, isSearch: true, isCurrentSearch: i == searchState.currentMatchIndex);
+      }
+    }
+    
+    if (lastOffset < text.length) {
+      spans.add(TextSpan(text: text.substring(lastOffset)));
+    }
+    
+    return TextSpan(children: spans, style: baseStyle);
+  }
+
   @override
   Widget build(BuildContext context) {
     final doc = ref.watch(currentDocumentProvider);
     final l10n = AppLocalizations.of(context)!;
     final ttsState = ref.watch(ttsStateProvider).value ?? TtsState.idle;
+    final ttsProgress = ref.watch(ttsProgressProvider).value;
     final prefs = ref.watch(readerPreferencesProvider);
     final uiState = ref.watch(readerUiProvider);
+    final searchState = ref.watch(searchProvider);
+
+    // Auto-scroll to TTS spoken word
+    ref.listen(ttsProgressProvider, (previous, next) {
+      if (next.value != null && ttsState == TtsState.playing) {
+        final textStyle = TextStyle(
+          color: _getTextColor(prefs.themeType),
+          fontSize: prefs.fontSize,
+          height: prefs.lineHeight,
+          letterSpacing: prefs.letterSpacing,
+          fontFamily: 'Roboto',
+        );
+        _scrollToMatch(next.value!.startOffset, doc?.extractedText ?? '', textStyle);
+      }
+    });
+
+    ref.listen(searchProvider, (previous, next) {
+      if (previous?.currentMatchIndex != next.currentMatchIndex && next.matches.isNotEmpty) {
+        final match = next.matches[next.currentMatchIndex];
+        final textStyle = TextStyle(
+          color: _getTextColor(prefs.themeType),
+          fontSize: prefs.fontSize,
+          height: prefs.lineHeight,
+          letterSpacing: prefs.letterSpacing,
+          fontFamily: 'Roboto',
+        );
+        _scrollToMatch(match.startOffset, doc?.extractedText ?? '', textStyle);
+      }
+      
+      if (!previous!.isSearchBarVisible && next.isSearchBarVisible) {
+        _searchFocus.requestFocus();
+      }
+    });
 
     if (doc == null) {
       return AppScaffold(
@@ -184,78 +329,168 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> with WidgetsBinding
           : SystemUiOverlayStyle.light,
       child: Scaffold(
         backgroundColor: bgColor,
-        body: Stack(
-          children: [
-            GestureDetector(
-              onTap: () {
-                ref.read(readerUiProvider.notifier).toggleImmersive();
-                _hideUiTimer?.cancel();
-                _hideUiTimer = null;
-              },
-              child: SingleChildScrollView(
-                controller: _scrollController,
-                physics: const BouncingScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.l,
-                  MediaQuery.of(context).padding.top + 80,
-                  AppSpacing.l,
-                  150,
-                ),
-                child: SelectableText(
-                  doc.extractedText,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: prefs.fontSize,
-                    height: prefs.lineHeight,
-                    letterSpacing: prefs.letterSpacing,
-                    fontFamily: 'Roboto',
-                  ),
-                ),
-              ),
-            ),
-
-            // Top Bar & Progress
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 250),
-              top: uiState.isImmersive ? -120 : 0,
-              left: 0,
-              right: 0,
-              child: Column(
-                children: [
-                  AppBar(
-                    backgroundColor: bgColor.withValues(alpha: 0.9),
-                    surfaceTintColor: Colors.transparent,
-                    title: Text(
-                      doc.name,
-                      style: AppTypography.titleMedium.copyWith(color: textColor),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    leading: BackButton(color: textColor),
-                    actions: [
-                      IconButton(
-                        icon: Icon(Icons.info_outline_rounded, color: textColor),
-                        onPressed: () => _showStats(context, doc, l10n),
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              // Top Bar & Progress
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  height: uiState.isImmersive ? 0 : null,
+                  child: Column(
+                    children: [
+                      AppBar(
+                        backgroundColor: bgColor.withValues(alpha: 0.9),
+                        surfaceTintColor: Colors.transparent,
+                        title: Text(
+                          doc.name,
+                          style: AppTypography.titleMedium.copyWith(color: textColor),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        leading: BackButton(color: textColor),
+                          actions: [
+                            IconButton(
+                              icon: Icon(Icons.search_rounded, color: textColor),
+                              onPressed: () => ref.read(searchProvider.notifier).toggleSearchBar(),
+                            ),
+                            _AnimatedFavoriteButton(doc: doc, textColor: textColor),
+                            _BookmarkButton(doc: doc, textColor: textColor, scrollController: _scrollController),
+                            IconButton(
+                              icon: Icon(Icons.info_outline_rounded, color: textColor),
+                              onPressed: () => _showStats(context, doc, l10n),
+                            ),
+                          ],
+                      ),
+                      LinearProgressIndicator(
+                        value: uiState.progress,
+                        backgroundColor: textColor.withValues(alpha: 0.1),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.primary,
+                        ),
+                        minHeight: 2,
+                      ),
+                      // Search Bar
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        height: searchState.isSearchBarVisible ? 60 : 0,
+                        child: SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          child: Container(
+                            height: 60,
+                            color: bgColor,
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m, vertical: AppSpacing.s),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _searchController,
+                                    focusNode: _searchFocus,
+                                    style: TextStyle(color: textColor),
+                                    decoration: InputDecoration(
+                                      hintText: l10n.searchDocument,
+                                      hintStyle: TextStyle(color: textColor.withValues(alpha: 0.5)),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(30),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      filled: true,
+                                      fillColor: textColor.withValues(alpha: 0.05),
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.m),
+                                    ),
+                                    onChanged: (val) {
+                                      _searchDebounce?.cancel();
+                                      _searchDebounce = Timer(const Duration(milliseconds: 250), () {
+                                        ref.read(searchProvider.notifier).search(val, doc.extractedText);
+                                      });
+                                    },
+                                  ),
+                                ),
+                                if (searchState.isSearching) ...[
+                                  const SizedBox(width: AppSpacing.s),
+                                  SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: textColor)),
+                                ] else if (searchState.matches.isNotEmpty) ...[
+                                  const SizedBox(width: AppSpacing.s),
+                                  Text(
+                                    l10n.matchCount(searchState.currentMatchIndex + 1, searchState.matches.length),
+                                    style: TextStyle(color: textColor, fontSize: 12),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.keyboard_arrow_up_rounded, color: textColor),
+                                    onPressed: () => ref.read(searchProvider.notifier).previousMatch(),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.keyboard_arrow_down_rounded, color: textColor),
+                                    onPressed: () => ref.read(searchProvider.notifier).nextMatch(),
+                                  ),
+                                ] else if (searchState.query.isNotEmpty) ...[
+                                  const SizedBox(width: AppSpacing.s),
+                                  Text(l10n.noMatchesFound, style: TextStyle(color: textColor, fontSize: 12)),
+                                ],
+                                IconButton(
+                                  icon: Icon(Icons.close_rounded, color: textColor),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    ref.read(searchProvider.notifier).hideSearchBar();
+                                    _searchFocus.unfocus();
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  LinearProgressIndicator(
-                    value: uiState.progress,
-                    backgroundColor: textColor.withValues(alpha: 0.1),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).colorScheme.primary,
+                ),
+              ),
+
+              // Document
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    ref.read(readerUiProvider.notifier).toggleImmersive();
+                    _hideUiTimer?.cancel();
+                    _hideUiTimer = null;
+                  },
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(AppSpacing.l),
+                    child: SafeArea(
+                      top: false,
+                      bottom: false,
+                      child: SelectableText.rich(
+                  _buildHighlightedText(
+                    doc.extractedText,
+                    searchState,
+                    ttsProgress,
+                    TextStyle(
+                      color: textColor,
+                      fontSize: prefs.fontSize,
+                      height: prefs.lineHeight,
+                      letterSpacing: prefs.letterSpacing,
+                      fontFamily: 'Roboto',
                     ),
-                    minHeight: 2,
                   ),
-                ],
+                  onSelectionChanged: (selection, cause) {
+                    if (cause == SelectionChangedCause.tap) {
+                      ref.read(ttsRepositoryProvider).speak(doc.extractedText, startOffset: selection.baseOffset);
+                    }
+                  },
+                ),
               ),
             ),
+          ),
+        ),
 
-            // Bottom Control Bar
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 250),
-              bottom: uiState.isImmersive ? -150 : 0,
-              left: 0,
-              right: 0,
+          // Bottom Control Bar
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            alignment: Alignment.bottomCenter,
+            child: SizedBox(
+              height: uiState.isImmersive ? 0 : null,
               child: _PremiumControlBar(
                 state: ttsState,
                 text: doc.extractedText,
@@ -264,10 +499,12 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> with WidgetsBinding
                 progress: uiState.progress,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ),
+  ),
+  );
   }
 
   void _showStats(BuildContext context, StudyDocument doc, AppLocalizations l10n) {
@@ -347,9 +584,13 @@ class _PremiumControlBar extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                IconButton(
-                  icon: Icon(Icons.replay_10_rounded, color: textColor.withValues(alpha: 0.3)),
-                  onPressed: null, // Disabled until implemented
+                Tooltip(
+                  message: AppLocalizations.of(context)!.rewindWords(30),
+                  child: IconButton(
+                    icon: Icon(Icons.replay_30_rounded, color: textColor),
+                    onPressed: () => repo.seekWords(-30),
+                    tooltip: AppLocalizations.of(context)!.rewindWords(30),
+                  ),
                 ),
                 FloatingActionButton(
                   elevation: 0,
@@ -358,15 +599,21 @@ class _PremiumControlBar extends ConsumerWidget {
                   onPressed: () {
                     if (state == TtsState.playing) {
                       repo.pause();
+                    } else if (state == TtsState.paused) {
+                      repo.seekWords(0); // This just triggers resume from current offset
                     } else {
                       repo.speak(text);
                     }
                   },
                   child: Icon(state == TtsState.playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
                 ),
-                IconButton(
-                  icon: Icon(Icons.forward_30_rounded, color: textColor.withValues(alpha: 0.3)),
-                  onPressed: null, // Disabled until implemented
+                Tooltip(
+                  message: AppLocalizations.of(context)!.forwardWords(30),
+                  child: IconButton(
+                    icon: Icon(Icons.forward_30_rounded, color: textColor),
+                    onPressed: () => repo.seekWords(30),
+                    tooltip: AppLocalizations.of(context)!.forwardWords(30),
+                  ),
                 ),
               ],
             ),
@@ -581,6 +828,118 @@ class _ControlSlider extends StatelessWidget {
           onChanged: onChanged,
         ),
       ],
+    );
+  }
+}
+
+class _AnimatedFavoriteButton extends ConsumerWidget {
+  final StudyDocument doc;
+  final Color textColor;
+
+  const _AnimatedFavoriteButton({required this.doc, required this.textColor});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Actually we should watch the provider itself to rebuild when it changes.
+    // The previous line was reading the notifier without watching state changes.
+    final favorites = ref.watch(favoriteIdsProvider).value ?? [];
+    final currentlyFavorite = favorites.contains(doc.id);
+
+    return IconButton(
+      icon: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+        child: Icon(
+          currentlyFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+          key: ValueKey(currentlyFavorite),
+          color: currentlyFavorite ? Colors.amber : textColor,
+        ),
+      ),
+      onPressed: () {
+        ref.read(favoriteIdsProvider.notifier).toggleFavorite(doc.id);
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(currentlyFavorite ? 'Removed from Favorites' : 'Added to Favorites'),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _BookmarkButton extends ConsumerStatefulWidget {
+  final StudyDocument doc;
+  final Color textColor;
+  final ScrollController scrollController;
+
+  const _BookmarkButton({required this.doc, required this.textColor, required this.scrollController});
+
+  @override
+  ConsumerState<_BookmarkButton> createState() => _BookmarkButtonState();
+}
+
+class _BookmarkButtonState extends ConsumerState<_BookmarkButton> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.3), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.3, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _addBookmark() async {
+    if (!widget.scrollController.hasClients) return;
+
+    unawaited(_controller.forward(from: 0.0)); // Play animation
+
+    final uiState = ref.read(readerUiProvider);
+    final offset = widget.scrollController.offset;
+    final progress = uiState.progress;
+
+    final success = await ref.read(bookmarksProvider.notifier).addBookmark(
+      documentId: widget.doc.id,
+      documentTitle: widget.doc.name,
+      scrollOffset: offset,
+      progress: progress,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'Bookmark Added' : 'Bookmark already exists near here'),
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: IconButton(
+        icon: Icon(Icons.bookmark_add_outlined, color: widget.textColor),
+        onPressed: _addBookmark,
+      ),
     );
   }
 }

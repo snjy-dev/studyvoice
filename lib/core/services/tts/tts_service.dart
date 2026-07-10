@@ -32,4 +32,7 @@ abstract class TtsService {
 
   /// Disposes of any resources held by the service.
   void dispose();
+
+  /// Sets the handler for speech progress.
+  void setProgressHandler(Function(String text, int start, int end, String word) handler);
 }
